@@ -1,6 +1,7 @@
 
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 const dbConnect = require('./config/db/dbConnect')
 const { errorHandler, notFound } = require('./middlewares/Error/errorHandler')
 
@@ -16,8 +17,18 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
+//cors
+app.use(
+    cors({
+        origin: ["http://localhost:3000"],
+        // method: ["GET", "POST","PUT"],
+        credentials: true,
+    })
+);
+
 //CONNECT ROUTES
 app.use('/api/users', require('./route/users/usersRoute'))
+
 
 //ERROR HANDLER
 app.use(notFound)

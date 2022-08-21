@@ -4,13 +4,15 @@ const bcrypt = require('bcryptjs')
 const asyncHandler = require('express-async-handler')
 const generateToken = require('../../config/token /generateToken.js')
 const validateMongodbId = require('../../utils/validateMongodbID.js')
+const jwt = require('jsonwebtoken')
+const sendMail = require('../../utils/sendMail.js')
 
 //----------------------------------------------------------------
 // USER REGISTER
 // @route POST => /api/users/register
 //----------------------------------------------------------------
 const userRegister = asyncHandler(async (req, res) => {
-    const { firstName, lastName, email, password, phone } = req.body
+    const { fullName, email, password, phone } = req.body
     // Hash password
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
@@ -28,14 +30,21 @@ const userRegister = asyncHandler(async (req, res) => {
     } 
     //Create new user
     try {
+        
         const user = await User.create({
-            firstName,
-            lastName,
+            fullName,
             email,
             phone,
             password: hashedPassword
         })
-        res.status(200).json(user)
+        res.status(200).json({
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            profilePhoto: user.profilePhoto,
+            isAdmin: user.isAdmin,
+            token: generateToken(user._id)
+        })
     } catch (error) {
         throw new Error(error.message)
     }
@@ -56,8 +65,7 @@ const userLogin = asyncHandler(async (req, res) => {
     if (user && (await bcrypt.compare(password, user.password))) {
         res.status(200).json({
             _id: user._id,
-            firstName: user.firstName,
-            lastName: user.lastName,
+            fullName: user.fullName,
             email: user.email,
             profilePhoto: user.profilePhoto,
             isAdmin: user.isAdmin,
@@ -145,9 +153,9 @@ const { id } = req.user  // user from auth middleware
 validateMongodbId(id) //Check if user id is valid 
 try {
     const user = await User.findByIdAndUpdate(id,{
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
+        fullName: req.body.fullName,
         email: req.body.email,
+        phone : req.body.phone,
         bio: req.body.bio
     },{
         new : true,
@@ -183,6 +191,60 @@ const updatePassword = asyncHandler(async (req, res) => {
         throw new Error(error.message)
     }
 })
+//----------------------------------------------------------------
+// FORGOT PASSWORD
+// @route POST => /api/users/forgotPaswword
+//----------------------------------------------------------------
+const forgotPassword = asyncHandler(async(req, res)=>{
+const {email} =req.body
+
+//make sure use exists
+const user = await User.findOne({email})
+if(!user) throw new Error(`User with email : ${email} not found`)
+
+//if user exists create aone time link valid for 10 minutes
+const token = jwt.sign({ id:user._id }, process.env.JWT_SECRET, {
+    expiresIn: '10m',
+})
+//create link
+const link = `http://localhost:3000/resetPassword/${token}`
+sendMail(link,email)
+res.status(200).json({message: 'Password reset link sended successfully to your email address'} )
+})
+//----------------------------------------------------------------
+// RESET PASSWORD
+// @route POST => /api/users/resetPaswword
+//----------------------------------------------------------------
+const resetPassword = asyncHandler(async(req, res)=>{
+const  {password,token} = req.body
+  
+
+  try {
+    // verify the token is valid
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    console.log(req.body)
+    const user = await User.findById(decoded.id).select('-password')
+  
+    if(password) {
+        // Hash password
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt)
+        console.log(hashedPassword)
+        user.password = hashedPassword
+        const updatedUser = await user.save()
+        res.status(200).json({message:"Your password updated"})
+    }else{
+        res.status(304).json(user)
+    }
+
+  } catch (error) {
+    console.log('qqqqqqqqqqqqqqqqqqqqqqqqqq')
+    console.log(error.message)
+   throw new Error("your reset password link expired")
+  }
+  
+})
 
 
 module.exports = { 
@@ -193,7 +255,9 @@ module.exports = {
     userDetails,
     userProfile,
     updateProfile,
-    updatePassword
+    updatePassword,
+    forgotPassword,
+    resetPassword
     }
 
 // const deleteGoal = asyncHandler(async (req, res) => {

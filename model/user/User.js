@@ -4,12 +4,8 @@ const asyncHandler = require('express-async-handler')
 //CREATE USER SCHEMA
 const userSchema = new mongoose.Schema(
     {
-        firstName: {
+        fullName: {
             required: [true, "First name is required"],
-            type: String,
-        },
-        lastName: {
-            required: [true, "Last name is required"],
             type: String,
         },
         profilePhoto: {

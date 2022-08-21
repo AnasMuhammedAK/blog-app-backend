@@ -9,7 +9,9 @@ const {
     userDetails,
     userProfile,
     updateProfile,
-    updatePassword
+    updatePassword,
+    forgotPassword,
+    resetPassword
 } = require('../../controllers/users/UsersControl')
 
 
@@ -38,6 +40,12 @@ router.put('/profile',protected,updateProfile)
 
 //UPDATE PASSWORD
 router.put('/password',protected,updatePassword)
+
+//FORGOT PASSWORD
+router.post('/forgotPassword',forgotPassword)
+
+//RESET PASSWORD
+router.post('/resetpassword',resetPassword)
 
 
 module.exports = router
