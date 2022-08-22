@@ -7,7 +7,7 @@ const validateMongodbId = require('../../utils/validateMongodbID.js')
 const jwt = require('jsonwebtoken')
 const sendMail = require('../../utils/sendMail.js')
 const { sendOtp, verifyOTP } = require('../../utils/twilio.js')
-const { response } = require('express')
+
 
 //----------------------------------------------------------------
 // USER REGISTER
@@ -300,20 +300,42 @@ const userFollowing = asyncHandler(async (req, res) => {
     const loggedinUserId = req.user.id
     // 1.find the user you wanted to be follow and update it's followers feild
     // first we check if the user is already following
-    const targetUser = await User.findById(followId) 
+    const targetUser = await User.findById(followId)
     const isFollowing = targetUser.followers.find(
         singleId => singleId.toString() === loggedinUserId.toString())
     if (isFollowing) throw new Error(`alredy following`)
-
     await User.findByIdAndUpdate(followId, {
-        $push: { followers: loggedinUserId }
-    })
+        $push: { followers: loggedinUserId },
+        isFollowing : true
+    },{ new : true})
     // 2. update the user's following field 
     const user = await User.findByIdAndUpdate(loggedinUserId, {
         $push: { following: followId }
-    })
-
-    res.json(isFollowing)
+    },{ new : true})
+    res.json({ message: `successfully Followed ${targetUser.fullName}`, status: true })
+})
+//----------------------------------------------------------------
+// UNFOLLOWING
+// @route POST => /api/users/unfollow
+//----------------------------------------------------------------
+const userUnfollowing = asyncHandler(async (req, res) => {
+    const { unfollowId } = req.body
+    const loggedinUserId = req.user.id
+    // 1.find the user you wanted to be unfollow and update it's followers feild
+    // first we check if the user is already following
+    const targetUser = await User.findById(unfollowId)
+    const isFollowing = targetUser.followers.find(
+        singleId => singleId.toString() === loggedinUserId.toString())
+    if (!isFollowing) throw new Error(`You not following ${targetUser.fullName}`)
+    await User.findByIdAndUpdate(unfollowId, {
+        $pull: { followers: loggedinUserId },
+        isFollowing : false
+    },{ new : true})
+    // 2. update the user's following field 
+    const user = await User.findByIdAndUpdate(loggedinUserId, {
+        $pull: { following: unfollowId }
+    },{ new : true})
+    res.json({ message: `successfully unfollowed ${targetUser.fullName}`, status: true })
 })
 
 
@@ -321,7 +343,6 @@ module.exports = {
     userRegister,
     userLogin,
     fetchUsers,
-    deleteUser,
     userDetails,
     userProfile,
     updateProfile,
@@ -329,5 +350,6 @@ module.exports = {
     forgotPassword,
     resetPassword,
     verifyOtp,
-    userFollowing
+    userFollowing,
+    userUnfollowing
 }

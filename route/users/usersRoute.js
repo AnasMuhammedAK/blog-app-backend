@@ -5,7 +5,6 @@ const {
     userRegister,
     userLogin,
     fetchUsers,
-    deleteUser,
     userDetails,
     userProfile,
     updateProfile,
@@ -13,11 +12,9 @@ const {
     forgotPassword,
     resetPassword,
     verifyOtp,
-    userFollowing
+    userFollowing,
+    userUnfollowing
 } = require('../../controllers/users/UsersControl')
-
-
-
 
 //REGISTER USER
 router.post('/register', userRegister)
@@ -37,12 +34,6 @@ router.post('/verifyotp',verifyOtp)
 //FETCH ALL USERS
 router.get('/',protected,fetchUsers)
 
-//FETCH USER DETAILS
-router.get('/:id',protected,userDetails)
-
-//DELETE USER
-router.delete('/:id',protected,deleteUser)
-
 //USER PROFILE
 router.get('/profile' ,protected,userProfile)
 
@@ -54,6 +45,14 @@ router.put('/password',protected,updatePassword)
 
 //FOLLOWING
 router.put('/follow',protected,userFollowing)
+
+//UNFOLLOWING
+router.put('/unfollow',protected,userUnfollowing)
+
+//FETCH USER DETAILS
+router.get('/:id',protected,userDetails)
+
+
 
 
 
