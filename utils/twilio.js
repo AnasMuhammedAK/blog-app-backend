@@ -7,12 +7,17 @@ const OTP = require("twilio")(Account_SID, Auth_Token);
 
 //SEND OTP
 const sendOtp=(phone)=>{
+  console.log("Sending OTP...")
     try {
         OTP.verify
         .services(Messaging_Service_SID)
         .verifications.create({
           to: `+91${phone}`,
           channel: "sms",
+        }).then((response)=>{
+console.log(response);
+        }).catch((error)=>{
+          console.log(error);
         })
         return
     } catch (error) {

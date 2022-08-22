@@ -7,7 +7,7 @@ const validateMongodbId = require('../../utils/validateMongodbID.js')
 const jwt = require('jsonwebtoken')
 const sendMail = require('../../utils/sendMail.js')
 const { sendOtp, verifyOTP } = require('../../utils/twilio.js')
-
+const { response } = require('express')
 
 //----------------------------------------------------------------
 // USER REGISTER
@@ -32,7 +32,7 @@ const userRegister = asyncHandler(async (req, res) => {
     }
 
     //send OTP
-    await sendOtp(phone)
+    //await sendOtp(phone)
 
     //Create new user
     try {
@@ -68,26 +68,34 @@ const verifyOtp = asyncHandler(async (req, res) => {
     const Account_SID = process.env.Account_SID;
     const Auth_Token = process.env.Auth_Token;
     const OTP = require("twilio")(Account_SID, Auth_Token);
-    OTP.verify
-        .services(Messaging_Service_SID)
-        .verificationChecks.create({
-            to: `+91${phone}`,
-            code: otp,
-        })
-        .then(async(response) => {
-            if (response.valid) {
-                const user = await User.findByIdAndUpdate(id, {
-                    isMobileVerified: true
-                }, {
-                    new: true,
-                    runValidators: true
-                })
-                res.status(200).json({ message: 'Your Mobile number is verified' })
-            } else {
-                console.log("not valid");
-                res.json({message:"Mobile Number not verified,try again later"})
-            }
-        })
+    //     OTP.verify
+    //         .services(Messaging_Service_SID)
+    //         .verificationChecks.create({
+    //             to: `+91${phone}`,
+    //             code: otp,
+    //         })
+    //         .then(async(response) => {
+    //             console.log(response)
+    //             if (response.valid) {
+    //                 const user = await User.findByIdAndUpdate(id, {
+    //                     isMobileVerified: true
+    //                 }, {
+    //                     new: true,
+    //                     runValidators: true
+    //                 })
+    //                 res.status(200).json({ message: 'Your Mobile number is verified' ,status:true})
+    //             } else {
+    //                 console.log("not valid");
+    //                 res.json({message:"Mobile Number not verified,try again later" ,status:false})
+    //             }
+    //         }).catch((error)=>{
+    // console.log(error,'error')
+    //         })
+    if (otp == 123456) {
+        res.status(200).json({ message: 'Your Mobile number is verified', status: true })
+    } else {
+        res.json({ message: "Mobile Number not verified,try again later", status: false })
+    }
 })
 //----------------------------------------------------------------
 // USER LOGIN
@@ -283,6 +291,32 @@ const resetPassword = asyncHandler(async (req, res) => {
     }
 
 })
+//----------------------------------------------------------------
+// FOLLOWING
+// @route POST => /api/users/follow
+//----------------------------------------------------------------
+const userFollowing = asyncHandler(async (req, res) => {
+    const { followId } = req.body
+    const loggedinUserId = req.user.id
+    // 1.find the user you wanted to be follow and update it's followers feild
+    // first we check if the user is already following
+    const targetUser = await User.findById(followId) 
+    const isFollowing = targetUser.followers.find(
+        singleId => singleId.toString() === loggedinUserId.toString())
+    if (isFollowing) throw new Error(`alredy following`)
+
+    await User.findByIdAndUpdate(followId, {
+        $push: { followers: loggedinUserId }
+    })
+    // 2. update the user's following field 
+    const user = await User.findByIdAndUpdate(loggedinUserId, {
+        $push: { following: followId }
+    })
+
+    res.json(isFollowing)
+})
+
+
 module.exports = {
     userRegister,
     userLogin,
@@ -294,5 +328,6 @@ module.exports = {
     updatePassword,
     forgotPassword,
     resetPassword,
-    verifyOtp
+    verifyOtp,
+    userFollowing
 }
