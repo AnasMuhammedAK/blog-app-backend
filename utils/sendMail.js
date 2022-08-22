@@ -1,7 +1,6 @@
 
 const nodemailer = require("nodemailer");
 
-// async..await is not allowed in global scope, must use a wrapper
 async function sendMail(link,email) {
 
     console.log(process.env.GMAIL_APP_PASSWORD, process.env.APP_GMAIL)
@@ -16,10 +15,10 @@ async function sendMail(link,email) {
     },
   });
 
-  // send mail with defined transport object
+  // Send mail with defined transport object
   let info = await transporter.sendMail({
     from: process.env.APP_GMAIL, // sender address
-    to: 'anasabdulkareem100@gmail.com', // list of receivers
+    to: email, // list of receivers
     subject: "Reset Password", // Subject line
     text: "Your Password reset link", // plain text body
     html: `<a href=${link}> Click here <a/> to reset password`, // html body

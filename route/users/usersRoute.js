@@ -11,7 +11,8 @@ const {
     updateProfile,
     updatePassword,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    verifyOtp
 } = require('../../controllers/users/UsersControl')
 
 
@@ -46,6 +47,9 @@ router.post('/forgotPassword',forgotPassword)
 
 //RESET PASSWORD
 router.post('/resetpassword',resetPassword)
+
+//VERIFY OTP
+router.post('/verifyotp',verifyOtp)
 
 
 module.exports = router

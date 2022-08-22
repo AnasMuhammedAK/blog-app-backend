@@ -53,6 +53,7 @@ const userSchema = new mongoose.Schema(
             default: false,
         },
         isAccountVerified: { type: Boolean, default: false },
+        isMobileVerified: { type: Boolean, default: false },
         accountVerificationToken: String,
         accountVerificationTokenExpires: Date,
 
