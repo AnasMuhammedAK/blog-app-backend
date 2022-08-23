@@ -13,7 +13,8 @@ const {
     resetPassword,
     verifyOtp,
     userFollowing,
-    userUnfollowing
+    userUnfollowing,
+    handleRefreshToken
 } = require('../../controllers/users/UsersControl')
 
 //REGISTER USER
@@ -30,6 +31,9 @@ router.post('/resetpassword',resetPassword)
 
 //VERIFY OTP
 router.post('/verifyotp',verifyOtp)
+
+//REFRESH TOKEN 
+router.post('/refreshtoken',handleRefreshToken)
 
 //FETCH ALL USERS
 router.get('/',protected,fetchUsers)

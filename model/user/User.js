@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: [true, "Hei buddy Password is required"],
         },
+        refreshTokens : {
+            type: Array,
+            default: [],
+        },
         postCount: {
             type: Number,
             default: 0,

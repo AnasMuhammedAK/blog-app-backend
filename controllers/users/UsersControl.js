@@ -3,6 +3,7 @@ const User = require('../../model/user/User.js')
 const bcrypt = require('bcryptjs')
 const asyncHandler = require('express-async-handler')
 const generateToken = require('../../config/token /generateToken.js')
+const generateRefreshToken = require('../../config/token /generateRefreshToken.js')
 const validateMongodbId = require('../../utils/validateMongodbID.js')
 const jwt = require('jsonwebtoken')
 const sendMail = require('../../utils/sendMail.js')
@@ -43,6 +44,15 @@ const userRegister = asyncHandler(async (req, res) => {
             phone,
             password: hashedPassword
         })
+        //generate access and refresh tokens
+        const accessToken = generateToken(user._id)
+        const refreshToken = generateRefreshToken(user._id)
+
+        //push refresh token into user DB
+        await User.findByIdAndUpdate(user._id, {
+            $push: { refreshTokens: refreshToken },
+        }, { new: true })
+        // pass user into client
         res.status(200).json({
             _id: user._id,
             fullName: user.fullName,
@@ -50,7 +60,8 @@ const userRegister = asyncHandler(async (req, res) => {
             phone: user.phone,
             profilePhoto: user.profilePhoto,
             isAdmin: user.isAdmin,
-            token: generateToken(user._id)
+            accessToken,
+            refreshToken
         })
     } catch (error) {
         throw new Error(error.message)
@@ -111,19 +122,69 @@ const userLogin = asyncHandler(async (req, res) => {
     }
     // Check if password matches
     if (user && (await bcrypt.compare(password, user.password))) {
+         //generate access and refresh tokens
+         const accessToken = generateToken(user._id)
+         const refreshToken = generateRefreshToken(user._id)
+
         res.status(200).json({
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
             profilePhoto: user.profilePhoto,
             isAdmin: user.isAdmin,
-            token: generateToken(user._id)
+            accessToken,
+            refreshToken
         })
     } else {
         res.status(401)
         throw new Error('Invalid credentials')
     }
 })
+//----------------------------------------------------------------
+// HANDLE REFRESH TOKEN
+// @route POST => /api/users/refreshtoken
+//----------------------------------------------------------------
+const handleRefreshToken = asyncHandler(async (req, res) => {
+    //take the refresh token from the user
+    const refreshToken = req.body.token;
+    const userId = req.body._id
+
+    //send error if there is no token or it's invalid
+    if (!refreshToken) return res.status(401).json("You are not authenticated!");
+    //send error if this refresh token is not matchted with the current user DB
+    const user = await User.findById(userId);
+    const refreshTokens = user.refreshTokens
+    if (!refreshTokens.includes(refreshToken)) {
+        return res.status(403).json("Refresh token is not valid!");
+    }
+    jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET,async (err, user) => {
+        if(err){
+            console.log(err);
+            throw new Error(err);
+        }
+       
+        //pull old refresh token from DB
+        await User.findByIdAndUpdate(userId, {
+            $pull: { refreshTokens: refreshToken }
+        }, { new: true })
+
+        //get new refresh token and access token
+        const newAccessToken = generateToken(user);
+        const newRefreshToken = generateRefreshToken(user);
+
+        //push new refresh token to DB
+        await User.findByIdAndUpdate(userId, {
+            $push: { refreshTokens: newRefreshToken },
+        }, { new: true })
+
+       //if everything is ok, create new access token, refresh token and send to user
+        res.status(200).json({
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        });
+    })
+    
+});
 //----------------------------------------------------------------
 // FETCH ALL USERS
 // @route GET => /api/users
@@ -306,12 +367,12 @@ const userFollowing = asyncHandler(async (req, res) => {
     if (isFollowing) throw new Error(`alredy following`)
     await User.findByIdAndUpdate(followId, {
         $push: { followers: loggedinUserId },
-        isFollowing : true
-    },{ new : true})
+        isFollowing: true
+    }, { new: true })
     // 2. update the user's following field 
     const user = await User.findByIdAndUpdate(loggedinUserId, {
         $push: { following: followId }
-    },{ new : true})
+    }, { new: true })
     res.json({ message: `successfully Followed ${targetUser.fullName}`, status: true })
 })
 //----------------------------------------------------------------
@@ -329,12 +390,12 @@ const userUnfollowing = asyncHandler(async (req, res) => {
     if (!isFollowing) throw new Error(`You not following ${targetUser.fullName}`)
     await User.findByIdAndUpdate(unfollowId, {
         $pull: { followers: loggedinUserId },
-        isFollowing : false
-    },{ new : true})
+        isFollowing: false
+    }, { new: true })
     // 2. update the user's following field 
     const user = await User.findByIdAndUpdate(loggedinUserId, {
         $pull: { following: unfollowId }
-    },{ new : true})
+    }, { new: true })
     res.json({ message: `successfully unfollowed ${targetUser.fullName}`, status: true })
 })
 
@@ -342,6 +403,7 @@ const userUnfollowing = asyncHandler(async (req, res) => {
 module.exports = {
     userRegister,
     userLogin,
+    handleRefreshToken,
     fetchUsers,
     userDetails,
     userProfile,
