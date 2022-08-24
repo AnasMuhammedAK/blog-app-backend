@@ -126,6 +126,11 @@ const userLogin = asyncHandler(async (req, res) => {
          const accessToken = generateToken(user._id)
          const refreshToken = generateRefreshToken(user._id)
 
+         //push refresh token into user DB
+        await User.findByIdAndUpdate(user._id, {
+            $push: { refreshTokens: refreshToken },
+        }, { new: true })
+        
         res.status(200).json({
             _id: user._id,
             fullName: user.fullName,
@@ -146,8 +151,8 @@ const userLogin = asyncHandler(async (req, res) => {
 //----------------------------------------------------------------
 const handleRefreshToken = asyncHandler(async (req, res) => {
     //take the refresh token from the user
-    const refreshToken = req.body.token;
-    const userId = req.body._id
+    const refreshToken = req.body.refreshToken;
+    const userId = req.body.userId   
 
     //send error if there is no token or it's invalid
     if (!refreshToken) return res.status(401).json("You are not authenticated!");
@@ -169,8 +174,8 @@ const handleRefreshToken = asyncHandler(async (req, res) => {
         }, { new: true })
 
         //get new refresh token and access token
-        const newAccessToken = generateToken(user);
-        const newRefreshToken = generateRefreshToken(user);
+        const newAccessToken = generateToken(userId);
+        const newRefreshToken = generateRefreshToken(userId);
 
         //push new refresh token to DB
         await User.findByIdAndUpdate(userId, {
@@ -178,7 +183,8 @@ const handleRefreshToken = asyncHandler(async (req, res) => {
         }, { new: true })
 
        //if everything is ok, create new access token, refresh token and send to user
-        res.status(200).json({
+       console.log("tokens are refreshed successfully");
+       res.status(200).json({
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
         });
@@ -398,11 +404,31 @@ const userUnfollowing = asyncHandler(async (req, res) => {
     }, { new: true })
     res.json({ message: `successfully unfollowed ${targetUser.fullName}`, status: true })
 })
+//----------------------------------------------------------------
+// USER LOGOUT
+// @route POST => /api/users/unfollow
+//----------------------------------------------------------------
+const userLogout = asyncHandler(async(req, res) => {
+   try {
+    const userId = req.user._id
+    const refreshToken = req.body.refreshToken
+    //pull old refresh token from DB
+    await User.findByIdAndUpdate(userId, {
+        $pull: { refreshTokens: refreshToken }
+    }, { new: true })
+    console.log('user logged out')
+    res.status(200).json({status:true})
+   } catch (error) {
+    throw new Error(error.message)
+   }
+
+})
 
 
 module.exports = {
     userRegister,
     userLogin,
+    userLogout,
     handleRefreshToken,
     fetchUsers,
     userDetails,

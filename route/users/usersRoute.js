@@ -4,6 +4,7 @@ const protected = require('../../middlewares/auth/authMiddleware')
 const { 
     userRegister,
     userLogin,
+    userLogout,
     fetchUsers,
     userDetails,
     userProfile,
@@ -34,6 +35,9 @@ router.post('/verifyotp',verifyOtp)
 
 //REFRESH TOKEN 
 router.post('/refreshtoken',handleRefreshToken)
+
+//USER LOGOUT
+router.post('/logout',protected,userLogout)
 
 //FETCH ALL USERS
 router.get('/',protected,fetchUsers)
