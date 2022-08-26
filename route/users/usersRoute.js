@@ -68,7 +68,8 @@ router.get('/generate-verify-email-token', protected, generateVerificationTokenC
 router.post('/verifyaccount', protected, accountVerificationCtrl)
 
 //UPLOAD PROFILE PHOTO
-router.post('/upload-profile-photo', protected,
+router.post('/upload-profile-photo',
+    protected,
     profilePhotoUploadMiddleware.single("image"),
     profilePhotoResize,
     uploadProfilePhoto)

@@ -10,6 +10,7 @@ const { sendOtp, verifyOTP } = require('../../utils/twilio.js')
 const sendGridEmail = require('../../utils/sendGridEmail.js')
 const generateAccountVerificationToken = require('../../config/token /emilVerificationToken.js')
 const crypto = require("crypto")
+const cloudinaryUploadImg = require('../../utils/cloudinary.js')
 
 
 //----------------------------------------------------------------
@@ -473,11 +474,11 @@ const generateVerificationTokenCtrl = asyncHandler(async (req, res) => {
 // @route POST => /api/users/verify-email
 //----------------------------------------------------------------
 const accountVerificationCtrl = asyncHandler(async (req, res) => {
-    const {token} = req.body
-    console.log(token,"token")
+    const { token } = req.body
+    console.log(token, "token")
     try {
         const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-        console.log(hashedToken,"hashed")
+        console.log(hashedToken, "hashed")
         //find this user by token
         const userFound = await User.findOne({
             accountVerificationToken: hashedToken,
@@ -500,11 +501,21 @@ const accountVerificationCtrl = asyncHandler(async (req, res) => {
 //  UPLOAD PROFILE PHOTO
 // @route POST => /api/users/upload-profile-photo
 //----------------------------------------------------------------
-const uploadProfilePhoto = asyncHandler(async(req,res) => {
-    console.log(req.file)
-  res.json("uploaded")
+const uploadProfilePhoto = asyncHandler(async (req, res) => {
+    const { _id } = req.user
+    try {
+        //1. Get the oath to img
+        const localPath = `public/images/profilePhoto/${req.file.filename}`
+        //2.Upload to cloudinary
+        const imgUploaded = await cloudinaryUploadImg(localPath)
+        const user = await User.findByIdAndUpdate(_id,{
+            profilePhoto: imgUploaded.url
+        },{new: true})
+        res.status(200).json(user)
+    } catch (error) {
+        throw new Error(error.message)
+    }
 })
-
 
 module.exports = {
     userRegister,
@@ -524,5 +535,5 @@ module.exports = {
     generateVerificationTokenCtrl,
     accountVerificationCtrl,
     uploadProfilePhoto
-    
+
 }
