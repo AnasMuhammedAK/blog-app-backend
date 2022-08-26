@@ -1,4 +1,3 @@
-
 const User = require('../../model/user/User.js')
 const bcrypt = require('bcryptjs')
 const asyncHandler = require('express-async-handler')
@@ -8,7 +7,9 @@ const validateMongodbId = require('../../utils/validateMongodbID.js')
 const jwt = require('jsonwebtoken')
 const sendMail = require('../../utils/sendMail.js')
 const { sendOtp, verifyOTP } = require('../../utils/twilio.js')
-
+const sendGridEmail = require('../../utils/sendGridEmail.js')
+const generateAccountVerificationToken = require('../../config/token /emilVerificationToken.js')
+const crypto = require("crypto")
 
 //----------------------------------------------------------------
 // USER REGISTER
@@ -26,34 +27,34 @@ const userRegister = asyncHandler(async (req, res) => {
         throw new Error('User already exists')
     }
     //check if phone number is already registered
-    if(phone){
+    if (phone) {
         const phoneExists = await User.findOne({ phone })
         if (phoneExists) {
             res.status(409)
             throw new Error('This phone number is already taken by another user')
         }
-         //send OTP
+        //send OTP
         //await sendOtp(phone)
     }
-   
+
     //Create new user
     try {
         let user
-        if(phone){
-             user = await User.create({
+        if (phone) {
+            user = await User.create({
                 fullName,
                 email,
                 phone,
                 password: hashedPassword
             })
-        }else{
-             user = await User.create({
+        } else {
+            user = await User.create({
                 fullName,
                 email,
                 password: hashedPassword
             })
         }
-        
+
         //generate access and refresh tokens
         const accessToken = generateToken(user._id)
         const refreshToken = generateRefreshToken(user._id)
@@ -362,7 +363,6 @@ const resetPassword = asyncHandler(async (req, res) => {
         }
 
     } catch (error) {
-        console.log('qqqqqqqqqqqqqqqqqqqqqqqqqq')
         console.log(error.message)
         throw new Error("your reset password link expired")
     }
@@ -433,6 +433,68 @@ const userLogout = asyncHandler(async (req, res) => {
     }
 
 })
+//----------------------------------------------------------------
+// GENERATE ACCOUNT VERIFICATION TOKEN WITH EMAIL
+// @route POST => /api/users/verify-email
+//----------------------------------------------------------------
+const generateVerificationTokenCtrl = asyncHandler(async (req, res) => {
+
+    const userId = req.user.id
+    const user = await User.findById(userId);
+
+    try {
+        //Generate token
+        const {
+            verificationToken,
+            accountVerificationToken,
+            accountVerificationTokenExpires
+        } = await generateAccountVerificationToken()
+
+        //update the user
+        await User.findByIdAndUpdate(userId, {
+            accountVerificationToken,
+            accountVerificationTokenExpires
+        }, { new: true })
+
+        //build your message
+        const URL = `If you were requested to verify your account, verify now within 10 minutes, otherwise ignore this message <a href="http://localhost:3000/verify-account/${verificationToken}">Click to verify your account</a>`;
+        const subject = "Speed Code Account Verification"
+        const to = user.email
+        //sending to user email id
+        sendGridEmail(to, subject, verificationToken)
+        res.status(200).json(URL);
+    } catch (error) {
+        res.json(error);
+    }
+});
+//----------------------------------------------------------------
+//  ACCOUNT_VERIFICATION TOKEN WITH EMAIL VERIFY
+// @route POST => /api/users/verify-email
+//----------------------------------------------------------------
+const accountVerificationCtrl = asyncHandler(async (req, res) => {
+    const {token} = req.body
+    console.log(token,"token")
+    try {
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+        console.log(hashedToken,"hashed")
+        //find this user by token
+        const userFound = await User.findOne({
+            accountVerificationToken: hashedToken,
+            accountVerificationTokenExpires: { $gt: new Date() },
+        });
+        console.log(userFound);
+        if (!userFound) throw new Error("Token expired, try again later");
+        //update the proprt to true
+        userFound.isAccountVerified = true;
+        userFound.accountVerificationToken = undefined;
+        userFound.accountVerificationTokenExpires = undefined;
+        //save user information
+        await userFound.save();
+        res.json(userFound);
+    } catch (error) {
+        console.log(error.message)
+    }
+});
 
 
 module.exports = {
@@ -449,5 +511,7 @@ module.exports = {
     resetPassword,
     verifyOtp,
     userFollowing,
-    userUnfollowing
+    userUnfollowing,
+    generateVerificationTokenCtrl,
+    accountVerificationCtrl
 }

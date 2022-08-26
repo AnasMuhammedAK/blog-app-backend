@@ -15,7 +15,9 @@ const {
     verifyOtp,
     userFollowing,
     userUnfollowing,
-    handleRefreshToken
+    handleRefreshToken,
+    generateVerificationTokenCtrl,
+    accountVerificationCtrl
 } = require('../../controllers/users/UsersControl')
 
 //REGISTER USER
@@ -57,12 +59,14 @@ router.put('/follow',protected,userFollowing)
 //UNFOLLOWING
 router.put('/unfollow',protected,userUnfollowing)
 
+//GENERATE ACCOUNT VERIFICATION TOKEN
+router.get('/generate-verify-email-token',protected,generateVerificationTokenCtrl)
+
+//VERIFY Account
+router.post('/verifyaccount',protected,accountVerificationCtrl)
+
 //FETCH USER DETAILS
 router.get('/:id',protected,userDetails)
-
-
-
-
 
 
 module.exports = router
