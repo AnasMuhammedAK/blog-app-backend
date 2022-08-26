@@ -1,7 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const protected = require('../../middlewares/auth/authMiddleware')
-const { 
+const { profilePhotoUploadMiddleware, profilePhotoResize } = require('../../middlewares/imageUploads/uploadProfilePhoto.js')
+const {
     userRegister,
     userLogin,
     userLogout,
@@ -17,7 +18,8 @@ const {
     userUnfollowing,
     handleRefreshToken,
     generateVerificationTokenCtrl,
-    accountVerificationCtrl
+    accountVerificationCtrl,
+    uploadProfilePhoto
 } = require('../../controllers/users/UsersControl')
 
 //REGISTER USER
@@ -27,46 +29,58 @@ router.post('/register', userRegister)
 router.post('/login', userLogin)
 
 //FORGOT PASSWORD
-router.post('/forgotPassword',forgotPassword)
+router.post('/forgotPassword', forgotPassword)
 
 //RESET PASSWORD
-router.post('/resetpassword',resetPassword)
+router.post('/resetpassword', resetPassword)
 
 //VERIFY OTP
-router.post('/verifyotp',verifyOtp)
+router.post('/verifyotp', verifyOtp)
 
 //REFRESH TOKEN 
-router.post('/refreshtoken',handleRefreshToken)
+router.post('/refreshtoken', handleRefreshToken)
 
 //USER LOGOUT
-router.post('/logout',protected,userLogout)
+router.post('/logout', protected, userLogout)
 
 //FETCH ALL USERS
-router.get('/',protected,fetchUsers)
+router.get('/', protected, fetchUsers)
 
 //USER PROFILE
-router.get('/profile' ,protected,userProfile)
+router.get('/profile', protected, userProfile)
 
 //UPDATE PROFILE
-router.put('/profile',protected,updateProfile)
+router.put('/profile', protected, updateProfile)
 
 //UPDATE PASSWORD
-router.put('/password',protected,updatePassword)
+router.put('/password', protected, updatePassword)
 
 //FOLLOWING
-router.put('/follow',protected,userFollowing)
+router.put('/follow', protected, userFollowing)
 
 //UNFOLLOWING
-router.put('/unfollow',protected,userUnfollowing)
+router.put('/unfollow', protected, userUnfollowing)
 
 //GENERATE ACCOUNT VERIFICATION TOKEN
-router.get('/generate-verify-email-token',protected,generateVerificationTokenCtrl)
+router.get('/generate-verify-email-token', protected, generateVerificationTokenCtrl)
 
 //VERIFY Account
-router.post('/verifyaccount',protected,accountVerificationCtrl)
+router.post('/verifyaccount', protected, accountVerificationCtrl)
+
+//UPLOAD PROFILE PHOTO
+router.post('/upload-profile-photo', protected,
+    profilePhotoUploadMiddleware.single("image"),
+    profilePhotoResize,
+    uploadProfilePhoto)
 
 //FETCH USER DETAILS
-router.get('/:id',protected,userDetails)
+router.get('/:id', protected, userDetails)
+
+
+
+
+
+
 
 
 module.exports = router

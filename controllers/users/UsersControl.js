@@ -11,6 +11,7 @@ const sendGridEmail = require('../../utils/sendGridEmail.js')
 const generateAccountVerificationToken = require('../../config/token /emilVerificationToken.js')
 const crypto = require("crypto")
 
+
 //----------------------------------------------------------------
 // USER REGISTER
 // @route POST => /api/users/register
@@ -495,6 +496,14 @@ const accountVerificationCtrl = asyncHandler(async (req, res) => {
         console.log(error.message)
     }
 });
+//----------------------------------------------------------------
+//  UPLOAD PROFILE PHOTO
+// @route POST => /api/users/upload-profile-photo
+//----------------------------------------------------------------
+const uploadProfilePhoto = asyncHandler(async(req,res) => {
+    console.log(req.file)
+  res.json("uploaded")
+})
 
 
 module.exports = {
@@ -513,5 +522,7 @@ module.exports = {
     userFollowing,
     userUnfollowing,
     generateVerificationTokenCtrl,
-    accountVerificationCtrl
+    accountVerificationCtrl,
+    uploadProfilePhoto
+    
 }
