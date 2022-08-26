@@ -1,7 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const protected = require('../../middlewares/auth/authMiddleware')
-const { profilePhotoUploadMiddleware, profilePhotoResize } = require('../../middlewares/imageUploads/uploadProfilePhoto.js')
+const {
+    profilePhotoUploadMiddleware,
+    profilePhotoResize
+} = require('../../middlewares/imageUploads/uploadPhoto.js')
 const {
     userRegister,
     userLogin,

@@ -4,6 +4,7 @@ const User = require('../../model/user/User');
 const validateMongodbId = require('../../utils/validateMongodbID')
 const Filter = require('bad-words');
 const sendGridEmail = require('../../utils/sendGridEmail');
+const cloudinaryUploadImg = require('../../utils/cloudinary');
 
 
 //----------------------------------------------------------------
@@ -12,7 +13,7 @@ const sendGridEmail = require('../../utils/sendGridEmail');
 //----------------------------------------------------------------
 const createPost = asyncHandler(async (req , res) =>{
     const { id } = req.user
-    const { title, description, user } = req.body
+    const { title, description} = req.body
     validateMongodbId(id)
     //Check for having Bad words
     const filter = new Filter()
@@ -22,16 +23,21 @@ const createPost = asyncHandler(async (req , res) =>{
      await User.findByIdAndUpdate(id, {
         isBlocked: true
     }, { new : true})
-    res.json('Creating field and your are blocked, because you are using a bad words')
+    throw new error('Creating field and your are blocked, because you are using a bad words')
  }
-
+  //1. Get the oath to img
+  const localPath = `public/images/postPhotos/${req.file.filename}`
+  //2.Upload to cloudinary
+  const imgUploaded = await cloudinaryUploadImg(localPath)
     try {
-        const post = await Post.create(req.body)
+        const post = await Post.create({...req.body,
+            image: imgUploaded.url,
+            user: id
+        })
         res.json(post)
     } catch (error) {
         throw new Error(error.message)
     }
-res.json('post created')
 })
 
 const sendEmail = asyncHandler(async (req, res) => {
