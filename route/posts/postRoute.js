@@ -11,6 +11,7 @@ const {
     fetchPostDetails,
     updatePost,
     deletePost
+    
  } = require('../../controllers/posts/postControl')
 
 

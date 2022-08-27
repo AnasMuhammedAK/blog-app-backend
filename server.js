@@ -7,6 +7,7 @@ const { errorHandler, notFound } = require('./middlewares/Error/errorHandler')
 const userRoute = require('./route/users/usersRoute')
 const adminRoute = require('./route/admin/adminRoute')
 const postRoute = require('./route/posts/postRoute')
+const categoryRoute = require('./route/category/categoryRoute')
 
 const app = express()
 
@@ -32,6 +33,7 @@ app.use(
 app.use('/api/users', userRoute )
 app.use('/api/admin', adminRoute)
 app.use('/api/posts', postRoute)
+app.use('/api/category', categoryRoute)
 
 
 //ERROR HANDLER
