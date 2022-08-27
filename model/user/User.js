@@ -104,7 +104,12 @@ const userSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
-
+//virtual methode to populate the created posts
+userSchema.virtual("posts",{
+    ref: "Post",
+    foreignField: "user",
+    localField: "_id"
+})
 //Compile schema into model
 const User = mongoose.model("User", userSchema);
 

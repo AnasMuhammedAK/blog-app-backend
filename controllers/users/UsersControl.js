@@ -5,12 +5,14 @@ const generateToken = require('../../config/token /generateToken.js')
 const generateRefreshToken = require('../../config/token /generateRefreshToken.js')
 const validateMongodbId = require('../../utils/validateMongodbID.js')
 const jwt = require('jsonwebtoken')
+const fs = require('fs')
 const sendMail = require('../../utils/sendMail.js')
 const { sendOtp, verifyOTP } = require('../../utils/twilio.js')
 const sendGridEmail = require('../../utils/sendGridEmail.js')
 const generateAccountVerificationToken = require('../../config/token /emilVerificationToken.js')
 const crypto = require("crypto")
 const cloudinaryUploadImg = require('../../utils/cloudinary.js')
+const { fstat } = require('fs')
 
 
 //----------------------------------------------------------------
@@ -266,7 +268,7 @@ const userProfile = asyncHandler(async (req, res) => {
     const { id } = req.user
     validateMongodbId(id)  //Check if user id is valid
     try {
-        const myProfile = await User.findById(id)
+        const myProfile = await User.findById(id).populate("posts")
         res.status(200).json(myProfile)
     } catch (error) {
         throw new Error(error.message)
@@ -511,6 +513,8 @@ const uploadProfilePhoto = asyncHandler(async (req, res) => {
         const user = await User.findByIdAndUpdate(_id,{
             profilePhoto: imgUploaded.url
         },{new: true})
+        //remove curresponding image from our server
+        fs.unlinkSync(localPath)
         res.status(200).json(user)
     } catch (error) {
         throw new Error(error.message)

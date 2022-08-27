@@ -7,17 +7,27 @@ const {
 } = require('../../middlewares/imageUploads/uploadPhoto.js')
 const { 
     createPost,
-    sendEmail
+    fetchAllPosts,
+    fetchPostDetails,
+    updatePost,
+    deletePost
  } = require('../../controllers/posts/postControl')
 
 
 //CREATE POST
 router.post('/create',protected,postPhotoUploadMiddleware.single("image"),postPhotoResize,createPost)
 
-//SEND EMAIL
-router.post('/sms',sendEmail)
+//FETCH ALL POSTS
+router.get('/',fetchAllPosts)
 
+//FETCH SIGLE POST DETAILS
+router.get('/:id',fetchPostDetails)
 
+//UPDATE POST
+router.put('/:id',protected,updatePost)
+
+//DELETE POST
+router.delete('/:id',protected,deletePost)
 
 
 
