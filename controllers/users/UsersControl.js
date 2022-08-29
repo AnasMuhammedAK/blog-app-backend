@@ -12,7 +12,7 @@ const sendGridEmail = require('../../utils/sendGridEmail.js')
 const generateAccountVerificationToken = require('../../config/token /emilVerificationToken.js')
 const crypto = require("crypto")
 const cloudinaryUploadImg = require('../../utils/cloudinary.js')
-const { fstat } = require('fs')
+
 
 
 //----------------------------------------------------------------
@@ -88,35 +88,35 @@ const userRegister = asyncHandler(async (req, res) => {
 //----------------------------------------------------------------
 const verifyOtp = asyncHandler(async (req, res) => {
     const { otp, id, phone } = req.body
-    require("dotenv").config();
-    //otp twilio integration-----------------------------------------
-    const Messaging_Service_SID = process.env.Messaging_Service_SID;
-    const Account_SID = process.env.Account_SID;
-    const Auth_Token = process.env.Auth_Token;
-    const OTP = require("twilio")(Account_SID, Auth_Token);
-    //     OTP.verify
-    //         .services(Messaging_Service_SID)
-    //         .verificationChecks.create({
-    //             to: `+91${phone}`,
-    //             code: otp,
-    //         })
-    //         .then(async(response) => {
-    //             console.log(response)
-    //             if (response.valid) {
-    //                 const user = await User.findByIdAndUpdate(id, {
-    //                     isMobileVerified: true
-    //                 }, {
-    //                     new: true,
-    //                     runValidators: true
-    //                 })
-    //                 res.status(200).json({ message: 'Your Mobile number is verified' ,status:true})
-    //             } else {
-    //                 console.log("not valid");
-    //                 res.json({message:"Mobile Number not verified,try again later" ,status:false})
-    //             }
-    //         }).catch((error)=>{
-    // console.log(error,'error')
-    //         })
+    // console.log(req.body)
+    // require("dotenv").config();
+    // //otp twilio integration-----------------------------------------
+    // const Messaging_Service_SID = process.env.Messaging_Service_SID;
+    // const Account_SID = process.env.Account_SID;
+    // const Auth_Token = process.env.Auth_Token;
+    // const OTP = require("twilio")(Account_SID, Auth_Token);
+    // OTP.verify
+    //     .services(Messaging_Service_SID)
+    //     .verificationChecks.create({
+    //         to: `+91${phone}`,
+    //         code: otp,
+    //     })
+    //     .then(async (response) => {
+    //         console.log(response)
+    //         if (response.valid) {
+    //             const user = await User.findByIdAndUpdate(id, {
+    //                 isMobileVerified: true
+    //             }, {
+    //                 new: true
+    //             })
+    //             res.status(200).json({ message: 'Your Mobile number is verified', status: true })
+    //         } else {
+    //             console.log("not valid");
+    //             res.json({ message: "Mobile Number not verified,try again later", status: false })
+    //         }
+    //     }).catch((error) => {
+    //         console.log(error, 'error')
+    //     })
     if (otp == 123456) {
         res.status(200).json({ message: 'Your Mobile number is verified', status: true })
     } else {
@@ -510,9 +510,9 @@ const uploadProfilePhoto = asyncHandler(async (req, res) => {
         const localPath = `public/images/profilePhoto/${req.file.filename}`
         //2.Upload to cloudinary
         const imgUploaded = await cloudinaryUploadImg(localPath)
-        const user = await User.findByIdAndUpdate(_id,{
+        const user = await User.findByIdAndUpdate(_id, {
             profilePhoto: imgUploaded.url
-        },{new: true})
+        }, { new: true })
         //remove curresponding image from our server
         fs.unlinkSync(localPath)
         res.status(200).json(user)

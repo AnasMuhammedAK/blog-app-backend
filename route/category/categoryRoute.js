@@ -14,7 +14,7 @@ const {
 router.post('/create', protected, createCategory)
 
 //FETCH ALL CATEGORIES
-router.get("/", protected, fetchAllCategory)
+router.get("/all", protected, fetchAllCategory)
 
 //FETCH SINGLE CATEGORY
 router.get('/:id', protected, fetchCategory)
