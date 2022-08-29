@@ -10,11 +10,15 @@ const createCategory = asyncHandler( async(req, res) => {
     const { title } = req.body
     const { id, isAdmin } = req.user
     //if (!isAdmin) throw new Error("Only admins can create categories.")
+  try {
     const category = await Category.create({
         title,
         user: id
     })
-    res.status(200).json(category)
+    res.status(200).json({message:`Category "${category.title}" created successfully`})
+  } catch (error) {
+    throw new Error(error.message)
+  }
 })
 //----------------------------------------------------------
 //FETCH ALL CATEGORIES
@@ -54,7 +58,7 @@ const updateCategory = asyncHandler( async (req, res) => {
             new: true,
             runValidators: true
         })
-        res.status(200).json(category)
+        res.status(200).json({message:`Category "${category.title}" Updated successfully`})
     } catch (error) {
         throw new Error(error.message)
     }
@@ -66,8 +70,8 @@ const updateCategory = asyncHandler( async (req, res) => {
 const deleteCategory = asyncHandler (async (req,res) => {
     const { id } = req.params
     try {
-        await Category.findByIdAndDelete(id)
-        res.status(200).json("category deleted")
+       const category = await Category.findByIdAndDelete(id)
+        res.status(200).json({message:`Category "${category.title}" Deleted successfully`})
     } catch (error) {
         throw new Error(error.message)
     }
