@@ -75,8 +75,10 @@ const userRegister = asyncHandler(async (req, res) => {
             phone: user.phone,
             profilePhoto: user.profilePhoto,
             isAdmin: user.isAdmin,
+            roles: user.roles,
             accessToken,
-            refreshToken
+            refreshToken,
+            isSuccess:true
         })
     } catch (error) {
         throw new Error(error.message)
@@ -152,6 +154,7 @@ const userLogin = asyncHandler(async (req, res) => {
             email: user.email,
             profilePhoto: user.profilePhoto,
             isAdmin: user.isAdmin,
+            roles: user.roles,
             accessToken,
             refreshToken
         })

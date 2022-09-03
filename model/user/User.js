@@ -43,9 +43,10 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-        role: {
-            type: String,
-            enum: ["Admin", "Guest", "Blogger"],
+        roles: {
+            type: [],
+            //enum: ["Admin", "Guest", "Blogger"],
+            default:["Blogger"]
         },
         isFollowing: {
             type: Boolean,

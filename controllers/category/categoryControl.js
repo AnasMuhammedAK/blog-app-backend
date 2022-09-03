@@ -9,13 +9,15 @@ const Category = require("../../model/category/category.js")
 const createCategory = asyncHandler( async(req, res) => {
     const { title } = req.body
     const { id, isAdmin } = req.user
-    //if (!isAdmin) throw new Error("Only admins can create categories.")
+    if (!isAdmin) throw new Error("Only admins can create categories.")
+    const isExist = await Category.findOne({ title })
+    if (isExist) throw new Error("Category Already Exists")
   try {
     const category = await Category.create({
         title,
         user: id
     })
-    res.status(200).json({message:`Category "${category.title}" created successfully`})
+    res.status(200).json(category)
   } catch (error) {
     throw new Error(error.message)
   }
@@ -52,13 +54,13 @@ const fetchCategory = asyncHandler( async (req, res) => {
 const updateCategory = asyncHandler( async (req, res) => {
     const { id } = req.params
     try {
-        const category = await Category.findByIdAndUpdate(id.at,{
+        const category = await Category.findByIdAndUpdate(id,{
             title: req.body.title
         },{
             new: true,
             runValidators: true
         })
-        res.status(200).json({message:`Category "${category.title}" Updated successfully`})
+        res.status(200).json(category)
     } catch (error) {
         throw new Error(error.message)
     }
@@ -71,7 +73,7 @@ const deleteCategory = asyncHandler (async (req,res) => {
     const { id } = req.params
     try {
        const category = await Category.findByIdAndDelete(id)
-        res.status(200).json({message:`Category "${category.title}" Deleted successfully`})
+        res.status(200).json(category)
     } catch (error) {
         throw new Error(error.message)
     }
