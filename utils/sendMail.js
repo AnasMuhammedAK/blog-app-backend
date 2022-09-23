@@ -1,5 +1,5 @@
 
-const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer")
 
 async function sendMail(link,email) {
 

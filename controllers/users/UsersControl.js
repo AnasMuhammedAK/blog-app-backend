@@ -38,7 +38,7 @@ const userRegister = asyncHandler(async (req, res) => {
             throw new Error('This phone number is already taken by another user')
         }
         //send OTP
-        //await sendOtp(phone)
+        await sendOtp(phone)
     }
 
     //Create new user
@@ -90,13 +90,13 @@ const userRegister = asyncHandler(async (req, res) => {
 //----------------------------------------------------------------
 const verifyOtp = asyncHandler(async (req, res) => {
     const { otp, id, phone } = req.body
-    // console.log(req.body)
-    // require("dotenv").config();
-    // //otp twilio integration-----------------------------------------
-    // const Messaging_Service_SID = process.env.Messaging_Service_SID;
-    // const Account_SID = process.env.Account_SID;
-    // const Auth_Token = process.env.Auth_Token;
-    // const OTP = require("twilio")(Account_SID, Auth_Token);
+    console.log(req.body)
+    require("dotenv").config();
+    //otp twilio integration-----------------------------------------
+    const Messaging_Service_SID = process.env.Messaging_Service_SID;
+    const Account_SID = process.env.Account_SID;
+    const Auth_Token = process.env.Auth_Token;
+    const OTP = require("twilio")(Account_SID, Auth_Token);
     // OTP.verify
     //     .services(Messaging_Service_SID)
     //     .verificationChecks.create({

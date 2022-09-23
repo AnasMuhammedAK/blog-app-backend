@@ -24,7 +24,6 @@ app.use(express.urlencoded({ extended: false }))
 app.use(
     cors({
         origin: ["http://localhost:3000"],
-        // method: ["GET", "POST","PUT"],
         credentials: true,
     })
 );
@@ -48,3 +47,4 @@ app.listen(PORT,console.log(`Server running on port ${PORT}`))
 
 
 
+ 

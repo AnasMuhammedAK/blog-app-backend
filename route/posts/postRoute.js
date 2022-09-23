@@ -5,30 +5,38 @@ const {
     postPhotoUploadMiddleware,
     postPhotoResize
 } = require('../../middlewares/imageUploads/uploadPhoto.js')
-const { 
+const {
     createPost,
     fetchAllPosts,
     fetchPostDetails,
     updatePost,
-    deletePost
-    
- } = require('../../controllers/posts/postControl')
+    deletePost,
+    toggleAddLikeToPost,
+    toggleAddDislikeToPost
+
+} = require('../../controllers/posts/postControl')
 
 
 //CREATE POST
-router.post('/create',protected,postPhotoUploadMiddleware.single("image"),postPhotoResize,createPost)
+router.post('/create', protected, postPhotoUploadMiddleware.single("image"), postPhotoResize, createPost)
 
 //FETCH ALL POSTS
-router.get('/',fetchAllPosts)
+router.get('/', fetchAllPosts)
+
+//LIKE POST
+router.put('/like', protected, toggleAddLikeToPost)
+
+//LIKE POST
+router.put('/dislike', protected, toggleAddDislikeToPost)
 
 //FETCH SIGLE POST DETAILS
-router.get('/:id',fetchPostDetails)
+router.get('/:id', fetchPostDetails)
 
 //UPDATE POST
-router.put('/:id',protected,updatePost)
+router.put('/:id', protected, updatePost)
 
 //DELETE POST
-router.delete('/:id',protected,deletePost)
+router.delete('/:id', protected, deletePost)
 
 
 

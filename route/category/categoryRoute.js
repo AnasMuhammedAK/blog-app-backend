@@ -14,10 +14,10 @@ const {
 router.post('/create', protected, createCategory)
 
 //FETCH ALL CATEGORIES
-router.get("/all", protected, fetchAllCategory)
+router.get("/all", fetchAllCategory)
 
 //FETCH SINGLE CATEGORY
-router.get('/:id', protected, fetchCategory)
+router.get('/:id', fetchCategory)
 
 //UPDATE CATEGORY
 router.put('/:id', protected, updateCategory)
