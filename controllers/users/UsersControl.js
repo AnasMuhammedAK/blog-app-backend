@@ -268,7 +268,7 @@ const userDetails = asyncHandler(async (req, res) => {
 // @route GET => /api/users/profile
 //----------------------------------------------------------------
 const userProfile = asyncHandler(async (req, res) => {
-    const { id } = req.user
+    const { id } = req.params
     validateMongodbId(id)  //Check if user id is valid
     try {
         const myProfile = await User.findById(id).populate("posts")
@@ -403,21 +403,21 @@ const userFollowing = asyncHandler(async (req, res) => {
 // @route POST => /api/users/unfollow
 //----------------------------------------------------------------
 const userUnfollowing = asyncHandler(async (req, res) => {
-    const { unfollowId } = req.body
+    const { unFollowId } = req.body
     const loggedinUserId = req.user.id
     // 1.find the user you wanted to be unfollow and update it's followers feild
     // first we check if the user is already following
-    const targetUser = await User.findById(unfollowId)
+    const targetUser = await User.findById(unFollowId)
     const isFollowing = targetUser.followers.find(
         singleId => singleId.toString() === loggedinUserId.toString())
     if (!isFollowing) throw new Error(`You not following ${targetUser.fullName}`)
-    await User.findByIdAndUpdate(unfollowId, {
+    await User.findByIdAndUpdate(unFollowId, {
         $pull: { followers: loggedinUserId },
         isFollowing: false
     }, { new: true })
     // 2. update the user's following field 
     const user = await User.findByIdAndUpdate(loggedinUserId, {
-        $pull: { following: unfollowId }
+        $pull: { following: unFollowId }
     }, { new: true })
     res.json({ message: `successfully unfollowed ${targetUser.fullName}`, status: true })
 })
@@ -427,8 +427,8 @@ const userUnfollowing = asyncHandler(async (req, res) => {
 //----------------------------------------------------------------
 const userLogout = asyncHandler(async (req, res) => {
     try {
-        const userId = req.user._id
-        const refreshToken = req.body.refreshToken
+        const userId = req?.user?._id
+        const refreshToken = req?.body?.refreshToken
         //pull old refresh token from DB
         await User.findByIdAndUpdate(userId, {
             $pull: { refreshTokens: refreshToken }

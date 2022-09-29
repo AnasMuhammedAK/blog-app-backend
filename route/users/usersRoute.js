@@ -50,7 +50,7 @@ router.post('/logout', protected, userLogout)
 router.get('/', protected, fetchUsers)
 
 //USER PROFILE
-router.get('/profile', protected, userProfile)
+router.get('/profile/:id', protected, userProfile)
 
 //UPDATE PROFILE
 router.put('/profile', protected, updateProfile)
@@ -62,7 +62,7 @@ router.put('/password', protected, updatePassword)
 router.put('/follow', protected, userFollowing)
 
 //UNFOLLOWING
-router.put('/unfollow', protected, userUnfollowing)
+router.put('/un-follow', protected, userUnfollowing)
 
 //GENERATE ACCOUNT VERIFICATION TOKEN
 router.get('/generate-verify-email-token', protected, generateVerificationTokenCtrl)
@@ -71,7 +71,7 @@ router.get('/generate-verify-email-token', protected, generateVerificationTokenC
 router.post('/verifyaccount', protected, accountVerificationCtrl)
 
 //UPLOAD PROFILE PHOTO
-router.post('/upload-profile-photo',
+router.put('/profile-photo-upload',
     protected,
     profilePhotoUploadMiddleware.single("image"),
     profilePhotoResize,

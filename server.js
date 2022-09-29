@@ -4,10 +4,13 @@ const morgan = require('morgan')
 const cors = require('cors')
 const dbConnect = require('./config/db/dbConnect')
 const { errorHandler, notFound } = require('./middlewares/Error/errorHandler')
+
 const userRoute = require('./route/users/usersRoute')
 const adminRoute = require('./route/admin/adminRoute')
 const postRoute = require('./route/posts/postRoute')
 const categoryRoute = require('./route/category/categoryRoute')
+const commentRoute = require('./route/comments/commentRoute')
+const emailMsgRoute = require('./route/email/emailRoute')
 
 const app = express()
 
@@ -33,7 +36,8 @@ app.use('/api/users', userRoute )
 app.use('/api/admin', adminRoute)
 app.use('/api/posts', postRoute)
 app.use('/api/category', categoryRoute)
-
+app.use('/api/comments', commentRoute)
+app.use('/api/email',emailMsgRoute)
 
 //ERROR HANDLER
 app.use(notFound)
