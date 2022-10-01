@@ -4,10 +4,11 @@
   "description": "blog-app",
   "main": "server.js",
   "engines":{
-"node": "v16.17.0"
+"node": "v16.17.0",
+"npm":"8.15.0"
   },
   "scripts": {
-    "start": "node server.js",
+    "start":"node index.js",
     "server": "nodemon server.js"
   },
   "author": "Muhammed Anas AK",
