@@ -1,5 +1,7 @@
+const { response } = require("express");
 const asyncHandler = require("express-async-handler");
 const Comment = require("../../model/comments/Comment");
+const User = require("../../model/user/User");
 const validateMongodbId = require("../../utils/validateMongodbID");
 
 //-------------------------------------------------------------
@@ -7,10 +9,14 @@ const validateMongodbId = require("../../utils/validateMongodbID");
 //-------------------------------------------------------------
 const createComment = asyncHandler(async (req, res) => {
   //1.Get the user
-  const user = req.user;
+  const user = await User.findById(req?.user?._id);
   //2.Get the post Id
   const { postId, description } = req.body;
-  console.log(description);
+  //3.check if the user is blocked
+  if (user.isBlocked) {
+    response.status(451)
+    throw new Error('You are blocked')
+  }
   try {
     const comment = await Comment.create({
       post: postId,
@@ -46,7 +52,7 @@ const fetchComment = asyncHandler(async (req, res) => {
     const comment = await Comment.findById(id);
     res.status(200).json(comment);
   } catch (error) {
-   throw new Error(error.message)
+    throw new Error(error.message)
   }
 });
 
@@ -72,7 +78,7 @@ const updateComment = asyncHandler(async (req, res) => {
     );
     res.status(200).json(update);
   } catch (error) {
-   throw new Error(error.message);
+    throw new Error(error.message);
   }
 });
 
@@ -87,7 +93,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     const comment = await Comment.findByIdAndDelete(id);
     res.status(200).json(comment);
   } catch (error) {
-   throw new Error(error.message)
+    throw new Error(error.message)
   }
 });
 

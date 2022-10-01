@@ -24,6 +24,16 @@ const createPost = asyncHandler(async (req, res) => {
     }, { new: true })
     throw new error('Creating field and your are blocked, because you are using a bad words')
   }
+  const user = await User.findById(id)
+  // check user is blocked
+  if (user.isBlocked) {
+    res.status(451)
+    throw new error('Your are blocked')
+  }
+  // check user followers
+  if (user.followers.length <= 2 && user.postCount >= 2) {
+    res.status(400).json('You can only create maximum 2 post. Otherways you need more than 10 followers.')
+  }
   //1. Get the path to img
   const localPath = `public/images/postPhotos/${req.file.filename}`
   //2.Upload to cloudinary
@@ -34,6 +44,9 @@ const createPost = asyncHandler(async (req, res) => {
       image: imgUploaded.url,
       user: id
     })
+    //increase the user post count
+    user.postCount += 1
+    await user.save()
     //remove curresponding image from our server
     fs.unlinkSync(localPath)
     res.status(200).json(post)
@@ -66,10 +79,10 @@ const fetchPostDetails = asyncHandler(async (req, res) => {
   validateMongodbId(id)
   try {
     const post = await Post.findById(id)
-    .populate("user")
-    .populate("likes")
-    .populate("disLikes")
-    .populate("comments")
+      .populate("user")
+      .populate("likes")
+      .populate("disLikes")
+      .populate("comments")
     if (!post) throw new Error("THis Post not found")
     //update number of views 
     await Post.findByIdAndUpdate(id, {

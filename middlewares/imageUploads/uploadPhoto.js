@@ -41,6 +41,19 @@ const profilePhotoResize = async (req, res, next) => {
 
   next()
 }
+const bannerPhotoResize = async (req, res, next) => {
+  //check if there no file
+  if (!req.file) return next();
+  req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+
+  await sharp(req.file.buffer)
+    .resize(1250, 250)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(path.join(`public/images/bannerPhoto/${req.file.filename}`))
+
+  next()
+}
 //POSTS PHOTO
 //------------------------------------------------------------------------------
 const postPhotoUploadMiddleware = multer({
@@ -67,6 +80,7 @@ module.exports = {
   profilePhotoUploadMiddleware,
   profilePhotoResize,
   postPhotoUploadMiddleware,
-  postPhotoResize
+  postPhotoResize,
+  bannerPhotoResize
 };
 

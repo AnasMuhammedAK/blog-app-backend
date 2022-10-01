@@ -3,7 +3,8 @@ const router = express.Router()
 const protected = require('../../middlewares/auth/authMiddleware')
 const {
     profilePhotoUploadMiddleware,
-    profilePhotoResize
+    profilePhotoResize,
+    bannerPhotoResize
 } = require('../../middlewares/imageUploads/uploadPhoto.js')
 const {
     userRegister,
@@ -22,7 +23,8 @@ const {
     handleRefreshToken,
     generateVerificationTokenCtrl,
     accountVerificationCtrl,
-    uploadProfilePhoto
+    uploadProfilePhoto,
+    uploadBannerPhoto
 } = require('../../controllers/users/UsersControl')
 
 //REGISTER USER
@@ -65,10 +67,10 @@ router.put('/follow', protected, userFollowing)
 router.put('/un-follow', protected, userUnfollowing)
 
 //GENERATE ACCOUNT VERIFICATION TOKEN
-router.get('/generate-verify-email-token', protected, generateVerificationTokenCtrl)
+router.post('/generate-verify-email-token', protected, generateVerificationTokenCtrl)
 
 //VERIFY Account
-router.post('/verifyaccount', protected, accountVerificationCtrl)
+router.put('/verify-account', protected, accountVerificationCtrl)
 
 //UPLOAD PROFILE PHOTO
 router.put('/profile-photo-upload',
@@ -76,6 +78,13 @@ router.put('/profile-photo-upload',
     profilePhotoUploadMiddleware.single("image"),
     profilePhotoResize,
     uploadProfilePhoto)
+//UPLOAD PROFILE BANNER
+
+router.put('/banner-photo-upload',
+    protected,
+    profilePhotoUploadMiddleware.single("image"),
+    bannerPhotoResize,
+    uploadBannerPhoto)
 
 //FETCH USER DETAILS
 router.get('/:id', protected, userDetails)

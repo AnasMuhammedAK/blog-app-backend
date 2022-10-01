@@ -1,24 +1,30 @@
-const sgMail = require('@sendgrid/mail')
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-const sendGridEmail = (to, subject, message, sendby) => {
-  const msg = {
-    to: "anasmon800@gmail.com", // Change to your recipient
-    from: process.env.APP_GMAIL, // Change to your verified sender
-    subject: subject,
-    text: 'Hello',
-    html: `<h3>Subject : ${subject}</h3> <h4>Message : ${message}</h4> <br> <h5>Send By : ${sendby}</h5>`,
-  }
-  console.log(to)
-  sgMail
-    .send(msg)
-    .then(() => {
-      console.log('Email sent')
-    })
-    .catch((error) => {
-      console.error(error)
-    })
-  return
+const nodemailer = require("nodemailer")
+
+async function sendMail(to,subject,URL) {
+console.log(to,subject,URL)
+  // create reusable transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // process.env.APP_GMAILtrue for 465, false for other ports
+    auth: {
+      user: process.env.APP_GMAIL, // generated ethereal user
+      pass: process.env.GMAIL_APP_PASSWORD, // generated ethereal password
+    },
+  });
+
+  // Send mail with defined transport object
+  let info = await transporter.sendMail({
+    from: process.env.APP_GMAIL, // sender address
+    to, // list of receivers
+    subject, // Subject line
+    text: "Your Account verification link", // plain text body
+    html: URL // html body
+  });
+
+  console.log('sending done email verification token')
+ return 
 }
 
-module.exports = sendGridEmail
+module.exports = sendMail

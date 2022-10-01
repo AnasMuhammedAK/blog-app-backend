@@ -76,9 +76,10 @@ const userRegister = asyncHandler(async (req, res) => {
             profilePhoto: user.profilePhoto,
             isAdmin: user.isAdmin,
             roles: user.roles,
+            isAccountVerified: user.isAccountVerified,
             accessToken,
             refreshToken,
-            isSuccess:true
+            isSuccess: true
         })
     } catch (error) {
         throw new Error(error.message)
@@ -137,6 +138,10 @@ const userLogin = asyncHandler(async (req, res) => {
         res.status(401)
         throw new Error('Login credentials not found')
     }
+    if (user.isBlocked) {
+        res.status(451)
+        throw new Error('You are blocked')
+    }
     // Check if password matches
     if (user && (await bcrypt.compare(password, user.password))) {
         //generate access and refresh tokens
@@ -155,6 +160,7 @@ const userLogin = asyncHandler(async (req, res) => {
             profilePhoto: user.profilePhoto,
             isAdmin: user.isAdmin,
             roles: user.roles,
+            isAccountVerified: user.isAccountVerified,
             accessToken,
             refreshToken
         })
@@ -215,7 +221,7 @@ const handleRefreshToken = asyncHandler(async (req, res) => {
 //----------------------------------------------------------------
 const fetchUsers = asyncHandler(async (req, res) => {
     try {
-        const users = await User.find({})
+        const users = await User.find({ isAdmin: false }).populate('posts')
         if (users.length > 0) {
             res.status(200)
             res.json(users)
@@ -270,11 +276,35 @@ const userDetails = asyncHandler(async (req, res) => {
 const userProfile = asyncHandler(async (req, res) => {
     const { id } = req.params
     validateMongodbId(id)  //Check if user id is valid
+    const loginUserId = req?.user?._id?.toString();
     try {
-        const myProfile = await User.findById(id).populate("posts")
-        res.status(200).json(myProfile)
+        const myProfile = await User.findById(id)
+            .populate("posts")
+            .populate("followers")
+            .populate("following")
+            .populate("viewedBy")
+        const alreadyViewed = myProfile?.viewedBy?.find(user => {
+            return user?._id?.toString() === loginUserId
+        });
+        if (alreadyViewed || loginUserId == id) {
+            console.log('old viewer')
+            // console.log(myProfile)
+            res.status(200).json(myProfile)
+        } else {
+            console.log('new viewer')
+            const profile = await User.findByIdAndUpdate(myProfile?._id, {
+                $push: { viewedBy: loginUserId },
+            })
+            const newProfile = await User.findById(id)
+                .populate("posts")
+                .populate("followers")
+                .populate("following")
+                .populate("viewedBy")
+            //console.log(newProfile)
+            res.status(200).json(newProfile)
+        }
     } catch (error) {
-        throw new Error(error.message)
+        res.json(error);
     }
 })
 //----------------------------------------------------------------
@@ -305,14 +335,26 @@ const updateProfile = asyncHandler(async (req, res) => {
 //----------------------------------------------------------------
 const updatePassword = asyncHandler(async (req, res) => {
     const { id } = req.user  // user from auth middleware
-    const { password } = req.body
+    const { currentPassword, newPassword } = req.body
     validateMongodbId(id) //Check if user id is valid 
+    const user = await User.findById(id)
+    if (user.isBlocked) {
+        res.status(451)
+        throw new Error('You are blocked')
+    }
+    let isMatch = await bcrypt.compare(currentPassword, user.password)
+    //console.log(isMatch,currentPassword, newPassword, user.password)
+    if (!isMatch) {
+        console.log('password mismatch')
+        res.status(400)
+        throw new Error("You are entered wrong password")
+    }
     try {
-        const user = await User.findById(id)
-        if (password) {
+        //Check if password matches
+        if (newPassword) {
             // Hash password
             const salt = await bcrypt.genSalt(10)
-            const hashedPassword = await bcrypt.hash(password, salt)
+            const hashedPassword = await bcrypt.hash(newPassword, salt)
 
             user.password = hashedPassword
             const updatedUser = await user.save()
@@ -468,7 +510,7 @@ const generateVerificationTokenCtrl = asyncHandler(async (req, res) => {
         const subject = "Speed Code Account Verification"
         const to = user.email
         //sending to user email id
-        sendGridEmail(to, subject, verificationToken)
+        sendGridEmail(to, subject, URL)
         res.status(200).json(URL);
     } catch (error) {
         res.json(error);
@@ -481,25 +523,31 @@ const generateVerificationTokenCtrl = asyncHandler(async (req, res) => {
 const accountVerificationCtrl = asyncHandler(async (req, res) => {
     const { token } = req.body
     console.log(token, "token")
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    console.log(hashedToken, "hashed")
     try {
-        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-        console.log(hashedToken, "hashed")
+
         //find this user by token
         const userFound = await User.findOne({
             accountVerificationToken: hashedToken,
             accountVerificationTokenExpires: { $gt: new Date() },
         });
-        console.log(userFound);
-        if (!userFound) throw new Error("Token expired, try again later");
+        //console.log(userFound);
+        if (!userFound) {
+            res.status(500).json({ error: "Token expired, try again later" });
+
+        }
         //update the proprt to true
         userFound.isAccountVerified = true;
         userFound.accountVerificationToken = undefined;
         userFound.accountVerificationTokenExpires = undefined;
         //save user information
         await userFound.save();
-        res.json(userFound);
+        userFound.isSuccess = true
+        res.status(200).json(userFound);
     } catch (error) {
         console.log(error.message)
+        throw new Error(error.message);
     }
 });
 //----------------------------------------------------------------
@@ -518,12 +566,52 @@ const uploadProfilePhoto = asyncHandler(async (req, res) => {
         }, { new: true })
         //remove curresponding image from our server
         fs.unlinkSync(localPath)
-        res.status(200).json(user)
+        res.status(200).json({
+            _id: user._id,
+            fullName: user?.fullName,
+            email: user?.email,
+            profilePhoto: user?.profilePhoto,
+            bannerPhoto: user?.bannerPhoto,
+            isAdmin: user?.isAdmin,
+            roles: user?.roles,
+            isAccountVerified: user?.isAccountVerified,
+            isSuccess: true
+        })
     } catch (error) {
         throw new Error(error.message)
     }
 })
-
+//----------------------------------------------------------------
+//  UPLOAD PROFILE PHOTO
+// @route POST => /api/users/upload-profile-photo
+//----------------------------------------------------------------
+const uploadBannerPhoto = asyncHandler(async (req, res) => {
+    const { _id } = req.user
+    try {
+        //1. Get the oath to img
+        const localPath = `public/images/bannerPhoto/${req.file.filename}`
+        //2.Upload to cloudinary
+        const imgUploaded = await cloudinaryUploadImg(localPath)
+        const user = await User.findByIdAndUpdate(_id, {
+            bannerPhoto: imgUploaded.url
+        }, { new: true })
+        //remove curresponding image from our server
+        fs.unlinkSync(localPath)
+        res.status(200).json({
+            _id: user._id,
+            fullName: user?.fullName,
+            email: user?.email,
+            profilePhoto: user?.profilePhoto,
+            bannerPhoto: user?.bannerPhoto,
+            isAdmin: user?.isAdmin,
+            roles: user?.roles,
+            isAccountVerified: user?.isAccountVerified,
+            isSuccess: true
+        })
+    } catch (error) {
+        throw new Error(error.message)
+    }
+})
 module.exports = {
     userRegister,
     userLogin,
@@ -541,6 +629,7 @@ module.exports = {
     userUnfollowing,
     generateVerificationTokenCtrl,
     accountVerificationCtrl,
-    uploadProfilePhoto
+    uploadProfilePhoto,
+    uploadBannerPhoto
 
 }
