@@ -45,6 +45,7 @@ app.use(errorHandler)
 
 
 //Server configuration 
+app.set("port",process.env.PORT || 5050)
 app.listen(process.env.PORT || 5000,console.log(`Server running on port ${PORT}`))
 
 
