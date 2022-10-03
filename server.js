@@ -24,7 +24,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 //cors
-app.use(...cors());
+app.use(cors());
 
 //CONNECT ROUTES
 app.use('/api/users', userRoute)
