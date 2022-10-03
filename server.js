@@ -26,7 +26,7 @@ app.use(express.urlencoded({ extended: false }))
 //cors
 app.use(
     cors({
-        origin: ["http://localhost:3000"],
+        origin: ["http://localhost:3000",'https://speedcode-blogs.netlify.app'],
         credentials: true,
     })
 );
