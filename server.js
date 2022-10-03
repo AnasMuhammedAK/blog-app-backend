@@ -24,20 +24,15 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 //cors
-app.use(
-    cors({
-        origin: ["http://localhost:3000",'https://speedcode-blogs.netlify.app'],
-        credentials: true,
-    })
-);
+app.use(...cors());
 
 //CONNECT ROUTES
-app.use('/api/users', userRoute )
+app.use('/api/users', userRoute)
 app.use('/api/admin', adminRoute)
 app.use('/api/posts', postRoute)
 app.use('/api/category', categoryRoute)
 app.use('/api/comments', commentRoute)
-app.use('/api/email',emailMsgRoute)
+app.use('/api/email', emailMsgRoute)
 
 //ERROR HANDLER
 app.use(notFound)
@@ -47,9 +42,8 @@ app.use(errorHandler)
 //Server configuration 
 const PORT = process.env.PORT || 5050
 //app.set("port",process.env.PORT || 5050)
-app.listen(process.env.PORT || 5000,console.log(`Server running on port ${PORT}`))
+app.listen(process.env.PORT || 5000, console.log(`Server running on port ${PORT}`))
 
 
 
 
- 
