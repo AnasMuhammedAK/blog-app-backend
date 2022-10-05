@@ -231,6 +231,21 @@ const toggleAddDislikeToPost = asyncHandler(async (req, res) => {
     res.status(200).json(post);
   }
 });
+const searchPosts = asyncHandler(async (req, res) => {
+  const query = req.query.q
+  try {
+    const posts = await Post.find({
+      $or: [
+        { title: { $regex: new RegExp("^" + query + ".*", "i") } },
+        { description: { $regex: new RegExp("^" + query + ".*", "i") } },
+        { category: { $regex: new RegExp("^" + query + ".*", "i") } },
+      ],
+    })
+    res.status(200).json(posts)
+  } catch (error) {
+    throw new Error(error.message)
+  }
+})
 module.exports = {
   createPost,
   fetchAllPosts,
@@ -238,6 +253,7 @@ module.exports = {
   updatePost,
   deletePost,
   toggleAddLikeToPost,
-  toggleAddDislikeToPost
+  toggleAddDislikeToPost,
+  searchPosts
 
 }

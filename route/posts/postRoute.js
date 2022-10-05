@@ -12,7 +12,8 @@ const {
     updatePost,
     deletePost,
     toggleAddLikeToPost,
-    toggleAddDislikeToPost
+    toggleAddDislikeToPost,
+    searchPosts
 
 } = require('../../controllers/posts/postControl')
 
@@ -28,6 +29,9 @@ router.put('/like', protected, toggleAddLikeToPost)
 
 //LIKE POST
 router.put('/dislike', protected, toggleAddDislikeToPost)
+
+//SEARCH POST
+router.get('/search', searchPosts)
 
 //FETCH SIGLE POST DETAILS
 router.get('/:id', fetchPostDetails)
