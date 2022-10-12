@@ -184,33 +184,32 @@ const handleRefreshToken = asyncHandler(async (req, res) => {
     const user = await User.findById(userId);
     const refreshTokens = user.refreshTokens
     if (!refreshTokens.includes(refreshToken)) {
-        return res.status(403).json("Refresh token is not valid!");
+        return res.status(403).json("Refresh token is not valid for this user");
     }
     jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET, async (err, user) => {
         if (err) {
             console.log(err);
             throw new Error(err);
         }
-
         //pull old refresh token from DB
-        await User.findByIdAndUpdate(userId, {
-            $pull: { refreshTokens: refreshToken }
-        }, { new: true })
+        // await User.findByIdAndUpdate(userId, {
+        //     $pull: { refreshTokens: refreshToken }
+        // }, { new: true })
 
         //get new refresh token and access token
         const newAccessToken = generateToken(userId);
-        const newRefreshToken = generateRefreshToken(userId);
+        //const newRefreshToken = generateRefreshToken(userId);
 
         //push new refresh token to DB
-        await User.findByIdAndUpdate(userId, {
-            $push: { refreshTokens: newRefreshToken },
-        }, { new: true })
+        // await User.findByIdAndUpdate(userId, {
+        //     $push: { refreshTokens: newRefreshToken },
+        // }, { new: true })
 
         //if everything is ok, create new access token, refresh token and send to user
-        console.log("tokens are refreshed successfully");
+        console.log("Access token refreshed successfully");
         res.status(200).json({
             accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
+            refreshToken,
         });
     })
 

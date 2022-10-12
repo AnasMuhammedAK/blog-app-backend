@@ -13,7 +13,10 @@ const {
     deletePost,
     toggleAddLikeToPost,
     toggleAddDislikeToPost,
-    searchPosts
+    searchPosts,
+    savePost,
+    fetchSavedPosts,
+    deleteSavedPost
 
 } = require('../../controllers/posts/postControl')
 
@@ -32,6 +35,15 @@ router.put('/dislike', protected, toggleAddDislikeToPost)
 
 //SEARCH POST
 router.get('/search', searchPosts)
+
+//SAVE POST
+router.post('/save', protected,savePost)
+
+//SAVED POSTS
+router.get('/saved-list', protected,fetchSavedPosts)
+
+//SAVED POSTS
+router.delete('/saved/:id', protected,deleteSavedPost)
 
 //FETCH SIGLE POST DETAILS
 router.get('/:id', fetchPostDetails)

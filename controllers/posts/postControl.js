@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Post = require('../../model/post/Post');
 const User = require('../../model/user/User');
+const SavedPost = require('../../model/savedPosts/savedPosts')
 const validateMongodbId = require('../../utils/validateMongodbID')
 const Filter = require('bad-words')
 const cloudinaryUploadImg = require('../../utils/cloudinary');
@@ -231,6 +232,10 @@ const toggleAddDislikeToPost = asyncHandler(async (req, res) => {
     res.status(200).json(post);
   }
 });
+//----------------------------------------------------------------
+// SEARCH POST
+// @route GET => /api/posts/search
+//----------------------------------------------------------------
 const searchPosts = asyncHandler(async (req, res) => {
   const query = req.query.q
   try {
@@ -246,6 +251,76 @@ const searchPosts = asyncHandler(async (req, res) => {
     throw new Error(error.message)
   }
 })
+//----------------------------------------------------------------
+// SAVE POST
+// @route POST => /api/posts/save
+//----------------------------------------------------------------
+const savePost = asyncHandler(async (req, res) => {
+  const { id } = req.body
+  const userId = req.user.id
+  try {
+    const savedPosts = await SavedPost.findOne({ user: userId })
+    if (savedPosts) {
+      const isExist = savedPosts.post.includes(id)
+      if (isExist) {
+        const newSavedPosts = await SavedPost.findOneAndUpdate({ user: userId },
+          {
+            $pull: { post: id }
+          },
+          { new: true }
+        )
+        res.status(200).json(newSavedPosts)
+      } else {
+        const newSavedPosts = await SavedPost.findOneAndUpdate({ user: userId },
+          {
+            $push: { post: id }
+          },
+          { new: true }
+        )
+        res.status(200).json(newSavedPosts)
+      }
+    } else {
+      const newSavedPosts = await SavedPost.create({
+        user: userId,
+        post: id
+      })
+      res.status(200).json(newSavedPosts)
+    }
+  } catch (error) {
+    throw new Error(error.message)
+  }
+})
+//----------------------------------------------------------------
+// SAVED POSTS
+// @route GET => /api/posts/saved-list
+//----------------------------------------------------------------
+const fetchSavedPosts = asyncHandler(async (req, res) => {
+  try {
+    const posts = await SavedPost.find({ user: req.user.id }).populate("post").sort({ createdAt: -1 })
+    res.status(200).json(posts)
+  } catch (error) {
+    throw new Error(error.message)
+  }
+})
+//----------------------------------------------------------------
+// DELETE SAVED POST
+// @route GDELETEET => /api/posts/saved/:id
+//----------------------------------------------------------------
+const deleteSavedPost = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  const userId = req.user.id
+  try {
+    const savedPosts = await SavedPost.findOneAndUpdate({ user: userId },
+      {
+        $pull: { post: id }
+      },
+      { new: true }
+    )
+    res.status(200).json(savedPosts)
+  } catch (error) {
+    throw new Error(error.message)
+  }
+});
 module.exports = {
   createPost,
   fetchAllPosts,
@@ -254,6 +329,9 @@ module.exports = {
   deletePost,
   toggleAddLikeToPost,
   toggleAddDislikeToPost,
-  searchPosts
+  searchPosts,
+  savePost,
+  fetchSavedPosts,
+  deleteSavedPost
 
 }
